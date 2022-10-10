@@ -11,7 +11,7 @@ def main():
 
 	c.execute('''
 		CREATE TABLE IF NOT EXISTS info
-		(id INTEGER PRIMARY KEY, year INTEGER, classification TEXT);
+		(id INTEGER PRIMARY KEY, year INTEGER, classification TEXT, material TEXT);
 		''')
 	c.execute('''
 		CREATE TABLE IF NOT EXISTS images
@@ -48,6 +48,14 @@ def main():
 		else:
 			classification = None
 
+		materials = ""
+		if(object["materials"]):
+			for material in object["materials"]:
+				materials += material["fi"] + ","
+		else:
+			materials = None
+
+
 		if(object["multimedia"] and year):
 			filename = object["multimedia"][0]["filename"]
 			filepath = 'figures/'+filename
@@ -56,13 +64,13 @@ def main():
 			sizex = im.shape[0]
 			sizey = im.shape[1]
 
-			c.execute("INSERT INTO info VALUES(%s, %s, '%s');"%(str(id), str(year), str(classification)))
+			c.execute("INSERT INTO info VALUES(%s, %s, '%s', '%s');"%(str(id), str(year), str(classification), str(materials)))
 			c.execute("INSERT INTO images VALUES(%s, %s, %s, '%s');"%(str(id), str(sizex), str(sizey), str(filepath)))
 
 
 	c.execute(
 	'''
-	SELECT info.id, info.year, info.classification, images.sizex, images.sizey, images.file_path 
+	SELECT info.id, info.year, info.classification, info.material, images.sizex, images.sizey, images.file_path 
 	FROM images INNER JOIN info ON images.id=info.id;
 	''')
 
