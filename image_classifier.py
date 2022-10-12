@@ -29,10 +29,10 @@ def main():
 	images = []
 	for path in image_paths:
 		im = cv2.imread("cropped_figures/"+path.split("/")[1])
-		images.append(im[200:300, 200:300, :])
-	
+		images.append(im)
+
 	images = np.asarray(images)
-	
+
 	#Normalize
 	min_year = min(years)
 	max_year = max(years)
@@ -40,27 +40,28 @@ def main():
 
 	years = np.asarray([float((year - min_year)/yeardif -0.0001) for year in years])
 
-	print(len(years))
+	ind = tf.range(start=0, limit=tf.shape(years)[0], dtype=tf.int32)
+	ind_shuffled = tf.random.shuffle(ind)
 
-	#image_train = tf.data.Dataset.from_tensor_slices(images)
-	#output_train = tf.data.Dataset.from_tensor_slices(years)
+	images = tf.gather(images, ind_shuffled)
+	years = tf.gather(years, ind_shuffled)
 
 	model = Sequential([
-	layers.Rescaling(1./255, input_shape=(100, 100, 3)),
-	layers.Conv2D(8, 3, padding='same', activation='relu'),
+	layers.Rescaling(1./255, input_shape=(500, 500, 3)),
+	layers.Conv2D(10, 3, padding='same', activation='relu'),
 	layers.MaxPooling2D(),
-	layers.Conv2D(16, 3, padding='same', activation='relu'),
+	layers.Conv2D(20, 3, padding='same', activation='relu'),
 	layers.MaxPooling2D(),
-	layers.Conv2D(32, 3, padding='same', activation='relu'),
+	layers.Conv2D(40, 3, padding='same', activation='relu'),
 	layers.MaxPooling2D(),
 	layers.Flatten(),
-	layers.Dense(64, activation='relu'),
+	layers.Dense(80, activation='relu'),
 	layers.Dense(1)
 ])
 
 	model.compile(optimizer='adam',
               loss=tf.keras.losses.MeanSquaredError(),
-              metrics=[tf.keras.metrics.MeanAbsoluteError()])
+              metrics=[tf.keras.metrics.MeanSquaredError()])
 
 	epochs = 10
 	history = model.fit(images, years, validation_split = 0.2, epochs = epochs)
